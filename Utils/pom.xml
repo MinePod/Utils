@@ -56,9 +56,6 @@
             </descriptorRefs>
             <finalName>Utils</finalName>
             <outputDirectory>target</outputDirectory>
-            <descriptors>
-              <descriptor>src/assembly/assembly.xml</descriptor>
-            </descriptors>
           </configuration>
           <executions>
             <execution>
