@@ -18,16 +18,17 @@ import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
 public class Files {	
-	private static FileInputStream fis;
-
 	public static String ReadFile(String path) throws IOException {
-	    BufferedReader br = new BufferedReader(new FileReader(path));
+		return ReadFile(new File(path));
+	}
+	
+	public static String ReadFile(File file) throws IOException {
+	    BufferedReader br = new BufferedReader(new FileReader(file));
 	    try {
 	        StringBuilder sb = new StringBuilder();
 	        String line = br.readLine();
 	        
 	        boolean first = true;
-
 	        while (line != null) {
 	        	if(first)
 	        		first = false;
@@ -43,8 +44,10 @@ public class Files {
 	}
 	
 	public static void WriteFile(String path, String stringToWrite) throws IOException {
-		File file = new File(path);
- 
+		WriteFile(new File(path), stringToWrite);
+	}
+	
+	public static void WriteFile(File file, String stringToWrite) throws IOException {
 		if(!file.exists()) {
 			file.createNewFile();
 		}
@@ -53,6 +56,10 @@ public class Files {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(stringToWrite);
 		bw.close();
+	}
+	
+	public static void Delete(String path) {
+		Delete(new File(path));
 	}
 	
 	public static void Delete(File file) {		
@@ -75,25 +82,31 @@ public class Files {
 	 }
 	 
 	 public static void Zip(String input, String output) throws ZipException {
-		 new File(output).delete();
+		 Zip(new File(input), new File(output));
+	 }
+	 
+	 public static void Zip(File input, File output) throws ZipException {
+		 output.delete();
 		 ZipFile zipFile = new ZipFile(output);
 		 ZipParameters parameters = new ZipParameters();
 		 parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 		 parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 			
-		 if(new File(input).isDirectory()) {
-			 zipFile.addFolder(new File(input).getAbsoluteFile(), parameters);
-		 } else {
-			 zipFile.addFile(new File(input).getAbsoluteFile(), parameters);
-		 }
+		 if(input.isDirectory())
+			 zipFile.addFolder(input.getAbsoluteFile(), parameters);
+		 else
+			 zipFile.addFile(input.getAbsoluteFile(), parameters);
 	 }
 	 
 	 public static String md5(String path) {
-		 File f = new File(path);
-	     if ((f.exists()) && (f.length() > 0L)) {
+		 return md5(new File(path));
+	 }
+	 
+	 public static String md5(File file) {
+	     if ((file.exists()) && (file.length() > 0L)) {
 	    	 try {
 	    		MessageDigest md = MessageDigest.getInstance("MD5");
-	    		fis = new FileInputStream(f);
+	    		FileInputStream fis = new FileInputStream(file);
 	    		byte[] dataBytes = new byte[1024];
 	    		int nread = 0;
 
@@ -102,6 +115,7 @@ public class Files {
 	    		}
 
     		    byte[] mdbytes = md.digest();
+    		    fis.close();
 	        
     		    return new String(Hex.encode(mdbytes));
 	    	} catch (NoSuchAlgorithmException e) {
