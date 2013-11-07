@@ -126,4 +126,33 @@ public class Files {
 	     }
 	     return null;
 	  }
+	 
+	 public static String sha256(String path) {
+		 return sha256(new File(path));
+	 }
+	 
+	 public static String sha256(File file) {
+	     if ((file.exists()) && (file.length() > 0L)) {
+	    	 try {
+	    		MessageDigest md = MessageDigest.getInstance("SHA-256");
+	    		FileInputStream fis = new FileInputStream(file);
+	    		byte[] dataBytes = new byte[1024];
+	    		int nread = 0;
+
+	    		while ((nread = fis.read(dataBytes)) != -1) {
+	    			md.update(dataBytes, 0, nread);
+	    		}
+
+    		    byte[] mdbytes = md.digest();
+    		    fis.close();
+	        
+    		    return new String(Hex.encode(mdbytes));
+	    	} catch (NoSuchAlgorithmException e) {
+	    		e.printStackTrace();
+	    	} catch (IOException e) {
+	    		e.printStackTrace();
+	    	}
+	     }
+	     return null;
+	  }
 }
