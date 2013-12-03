@@ -90,6 +90,14 @@ public class Files {
 		 Zip(inputFiles, output);
 	 }
 	 
+	 public static void Zip(String[] input, String output) throws ZipException {
+		 File[] inputFiles = new File[]{};
+		 for(int i = 0; i < input.length; i++) {
+			inputFiles[i] = new File(input[i]);
+		 }
+		 Zip(inputFiles, new File(output));
+	 }
+	 
 	 public static void Zip(File[] input, File output) throws ZipException {
 		 output.delete();
 		 ZipFile zipFile = new ZipFile(output);
