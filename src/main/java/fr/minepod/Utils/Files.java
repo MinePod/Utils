@@ -86,16 +86,24 @@ public class Files {
 	 }
 	 
 	 public static void Zip(File input, File output) throws ZipException {
+		 File[] inputFiles = new File[]{input};
+		 Zip(inputFiles, output);
+	 }
+	 
+	 public static void Zip(File[] input, File output) throws ZipException {
 		 output.delete();
 		 ZipFile zipFile = new ZipFile(output);
 		 ZipParameters parameters = new ZipParameters();
 		 parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 		 parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 			
-		 if(input.isDirectory())
-			 zipFile.addFolder(input.getAbsoluteFile(), parameters);
-		 else
-			 zipFile.addFile(input.getAbsoluteFile(), parameters);
+		 for(int i = 0; i < input.length; i++) {
+			 if(input[i].isDirectory()) {
+				 zipFile.addFolder(input[i].getAbsoluteFile(), parameters);
+			 } else {
+				 zipFile.addFile(input[i].getAbsoluteFile(), parameters);
+			 }
+		 }
 	 }
 	 
 	 public static String md5(String path) {
