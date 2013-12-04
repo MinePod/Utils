@@ -30,10 +30,12 @@ public class Logger {
 	public java.util.logging.Logger SetLogger(String LogFile) throws SecurityException, IOException {
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
 		logger.setLevel(Level.INFO);
-		FileHandler file = new FileHandler(LogFile);
-		PrettyFormatter formatter = new PrettyFormatter();
-    	file.setFormatter(formatter);
-    	logger.addHandler(file);
+		if(LogFile != null) {
+			FileHandler file = new FileHandler(LogFile);
+			PrettyFormatter formatter = new PrettyFormatter();
+	    	file.setFormatter(formatter);
+	    	logger.addHandler(file);
+		}
     	return logger;
 	}
 }
