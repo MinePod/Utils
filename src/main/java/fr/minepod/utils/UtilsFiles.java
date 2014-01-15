@@ -4,18 +4,21 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import org.bouncycastle.util.encoders.Hex;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
+
+import org.bouncycastle.util.encoders.Hex;
 
 public class UtilsFiles {	
 	public static String readFile(String path) throws IOException {
@@ -56,6 +59,27 @@ public class UtilsFiles {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(stringToWrite);
 		bw.close();
+	}
+
+	public static void copyFile(String input, String output) throws IOException {
+		copyFile(new File(input), new File(output));
+	}
+
+	public static void copyFile(File input, File output) throws IOException {
+		if(output.exists())
+			output.delete();
+
+		InputStream inputStream = new FileInputStream(input);
+		OutputStream outputStream = new FileOutputStream(output);
+
+		byte[] buffer = new byte[1024];
+		int length;
+		while((length = inputStream.read(buffer)) > 0){
+			outputStream.write(buffer, 0, length);
+		}
+
+		inputStream.close();
+		outputStream.close();
 	}
 
 	public static void delete(String path) {
