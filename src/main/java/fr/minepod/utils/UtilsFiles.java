@@ -5,11 +5,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -26,7 +28,15 @@ public class UtilsFiles {
 	}
 
 	public static String readFile(File file) throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(file));
+		return readFileWithEncoding(new InputStreamReader(new FileInputStream(file)));
+	}
+
+	public static String readFileUtf8(File file) throws IOException {
+		return readFileWithEncoding(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+	}
+
+	public static String readFileWithEncoding(Reader reader) throws IOException {
+		BufferedReader br = new BufferedReader(reader);
 		try {
 			StringBuilder sb = new StringBuilder();
 			String line = br.readLine();
@@ -55,8 +65,11 @@ public class UtilsFiles {
 			file.createNewFile();
 		}
 
-		FileWriter fw = new FileWriter(file.getAbsoluteFile());
-		BufferedWriter bw = new BufferedWriter(fw);
+		writeFileWithEncoding(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"), stringToWrite);
+	}
+
+	public static void writeFileWithEncoding(Writer writer, String stringToWrite) throws IOException {
+		BufferedWriter bw = new BufferedWriter(writer);
 		bw.write(stringToWrite);
 		bw.close();
 	}
@@ -66,8 +79,9 @@ public class UtilsFiles {
 	}
 
 	public static void copyFile(File input, File output) throws IOException {
-		if(output.exists())
+		if(output.exists()) {
 			output.delete();
+		}
 
 		InputStream inputStream = new FileInputStream(input);
 		OutputStream outputStream = new FileOutputStream(output);
@@ -116,9 +130,11 @@ public class UtilsFiles {
 
 	public static void zip(String[] input, String output) throws ZipException {
 		File[] inputFiles = new File[]{};
+
 		for(int i = 0; i < input.length; i++) {
 			inputFiles[i] = new File(input[i]);
 		}
+
 		zip(inputFiles, new File(output));
 	}
 
@@ -138,61 +154,38 @@ public class UtilsFiles {
 		}
 	}
 
-	public static String md5(String path) {
+	public static String md5(String path) throws NoSuchAlgorithmException, IOException {
 		return md5(new File(path));
 	}
 
-	public static String md5(File file) {
-		if ((file.exists()) && (file.length() > 0L)) {
-			try {
-				MessageDigest md = MessageDigest.getInstance("MD5");
-				FileInputStream fis = new FileInputStream(file);
-				byte[] dataBytes = new byte[1024];
-				int nread = 0;
-
-				while ((nread = fis.read(dataBytes)) != -1) {
-					md.update(dataBytes, 0, nread);
-				}
-
-				byte[] mdbytes = md.digest();
-				fis.close();
-
-				return new String(Hex.encode(mdbytes));
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return null;
+	public static String md5(File file) throws NoSuchAlgorithmException, IOException {
+		return encodeFile(file, MessageDigest.getInstance("MD5"));
 	}
 
-	public static String sha256(String path) {
+	public static String sha256(String path) throws NoSuchAlgorithmException, IOException {
 		return sha256(new File(path));
 	}
 
-	public static String sha256(File file) {
+	public static String sha256(File file) throws NoSuchAlgorithmException, IOException {
+		return encodeFile(file, MessageDigest.getInstance("SHA-256"));
+	}
+
+	public static String encodeFile(File file, MessageDigest md) throws IOException {
 		if ((file.exists()) && (file.length() > 0L)) {
-			try {
-				MessageDigest md = MessageDigest.getInstance("SHA-256");
-				FileInputStream fis = new FileInputStream(file);
-				byte[] dataBytes = new byte[1024];
-				int nread = 0;
+			FileInputStream fis = new FileInputStream(file);
+			byte[] dataBytes = new byte[1024];
+			int nread = 0;
 
-				while ((nread = fis.read(dataBytes)) != -1) {
-					md.update(dataBytes, 0, nread);
-				}
-
-				byte[] mdbytes = md.digest();
-				fis.close();
-
-				return new String(Hex.encode(mdbytes));
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			while ((nread = fis.read(dataBytes)) != -1) {
+				md.update(dataBytes, 0, nread);
 			}
+
+			byte[] mdbytes = md.digest();
+			fis.close();
+
+			return new String(Hex.encode(mdbytes));
 		}
+
 		return null;
 	}
 }
