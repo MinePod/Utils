@@ -21,6 +21,7 @@ import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
 import org.bouncycastle.util.encoders.Hex;
+import org.mozilla.universalchardet.UniversalDetector;
 
 public class UtilsFiles {	
 	public static String readFile(String path) throws IOException {
@@ -43,10 +44,11 @@ public class UtilsFiles {
 
 			boolean first = true;
 			while (line != null) {
-				if(first)
+				if(first) {
 					first = false;
-				else
+				} else {
 					sb.append("\n");
+				}
 				sb.append(line);
 				line = br.readLine();
 			}
@@ -72,6 +74,24 @@ public class UtilsFiles {
 		BufferedWriter bw = new BufferedWriter(writer);
 		bw.write(stringToWrite);
 		bw.close();
+	}
+
+	public static String getFileEncoding(File file) throws IOException {
+		byte[] buf = new byte[4096];
+		FileInputStream fileInputStream = new FileInputStream(file);
+		UniversalDetector detector = new UniversalDetector(null);
+
+		int nread;
+		while ((nread = fileInputStream.read(buf)) > 0 && !detector.isDone()) {
+			detector.handleData(buf, 0, nread);
+		}
+		detector.dataEnd();
+
+		String encoding = detector.getDetectedCharset();
+		detector.reset();
+		fileInputStream.close();
+
+		return encoding.toUpperCase();
 	}
 
 	public static void copyFile(String input, String output) throws IOException {

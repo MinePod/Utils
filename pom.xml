@@ -4,7 +4,7 @@
 
     <groupId>fr.minepod</groupId>
     <artifactId>utils</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1.0</version>
 
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -37,6 +37,11 @@
         	<artifactId>jsonpretty</artifactId>
         	<version>1.0.0</version>
         </dependency>
+        <dependency>
+			<groupId>com.googlecode.juniversalchardet</groupId>
+			<artifactId>juniversalchardet</artifactId>
+			<version>1.0.3</version>
+		</dependency>
     </dependencies>
 
     <build>
