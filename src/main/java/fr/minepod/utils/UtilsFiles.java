@@ -15,28 +15,26 @@ import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-import net.lingala.zip4j.model.ZipParameters;
-import net.lingala.zip4j.util.Zip4jConstants;
-
 import org.bouncycastle.util.encoders.Hex;
 import org.mozilla.universalchardet.UniversalDetector;
 
+import de.schlichtherle.truezip.file.TArchiveDetector;
+import de.schlichtherle.truezip.file.TFile;
+
 public class UtilsFiles {
-  public static String readFile(String path) throws IOException {
+  public String readFile(String path) throws IOException {
     return readFile(new File(path));
   }
 
-  public static String readFile(File file) throws IOException {
+  public String readFile(File file) throws IOException {
     return readFileWithEncoding(new InputStreamReader(new FileInputStream(file)));
   }
 
-  public static String readFileUtf8(File file) throws IOException {
+  public String readFileUtf8(File file) throws IOException {
     return readFileWithEncoding(new InputStreamReader(new FileInputStream(file), "UTF-8"));
   }
 
-  public static String readFileWithEncoding(Reader reader) throws IOException {
+  public String readFileWithEncoding(Reader reader) throws IOException {
     BufferedReader br = new BufferedReader(reader);
     try {
       StringBuilder sb = new StringBuilder();
@@ -58,11 +56,11 @@ public class UtilsFiles {
     }
   }
 
-  public static void writeFile(String path, String stringToWrite) throws IOException {
+  public void writeFile(String path, String stringToWrite) throws IOException {
     writeFile(new File(path), stringToWrite);
   }
 
-  public static void writeFile(File file, String stringToWrite) throws IOException {
+  public void writeFile(File file, String stringToWrite) throws IOException {
     if (!file.exists()) {
       file.createNewFile();
     }
@@ -71,13 +69,13 @@ public class UtilsFiles {
         stringToWrite);
   }
 
-  public static void writeFileWithEncoding(Writer writer, String stringToWrite) throws IOException {
+  public void writeFileWithEncoding(Writer writer, String stringToWrite) throws IOException {
     BufferedWriter bw = new BufferedWriter(writer);
     bw.write(stringToWrite);
     bw.close();
   }
 
-  public static String getFileEncoding(File file) throws IOException {
+  public String getFileEncoding(File file) throws IOException {
     byte[] buf = new byte[4096];
     FileInputStream fileInputStream = new FileInputStream(file);
     UniversalDetector detector = new UniversalDetector(null);
@@ -86,6 +84,7 @@ public class UtilsFiles {
     while ((nread = fileInputStream.read(buf)) > 0 && !detector.isDone()) {
       detector.handleData(buf, 0, nread);
     }
+
     detector.dataEnd();
 
     String encoding = detector.getDetectedCharset();
@@ -95,14 +94,12 @@ public class UtilsFiles {
     return encoding.toUpperCase();
   }
 
-  public static void copyFile(String input, String output) throws IOException {
+  public void copyFile(String input, String output) throws IOException {
     copyFile(new File(input), new File(output));
   }
 
-  public static void copyFile(File input, File output) throws IOException {
-    if (output.exists()) {
-      output.delete();
-    }
+  public void copyFile(File input, File output) throws IOException {
+    delete(output);
 
     InputStream inputStream = new FileInputStream(input);
     OutputStream outputStream = new FileOutputStream(output);
@@ -117,82 +114,83 @@ public class UtilsFiles {
     outputStream.close();
   }
 
-  public static void delete(String path) {
+  public void moveFile(String input, String output) {
+    moveFile(new File(input), new File(output));
+  }
+
+  public void moveFile(File input, File output) {
+    delete(output);
+
+    input.renameTo(output);
+  }
+
+  public void delete(String path) {
     delete(new File(path));
   }
 
-  public static void delete(File file) {
+  public void delete(File file) {
     if (file.exists()) {
       if (file.isDirectory() && file.list().length != 0) {
         String files[] = file.list();
+
         for (String temp : files) {
           File fileDelete = new File(file, temp);
           delete(fileDelete);
         }
       }
+
       file.delete();
     }
   }
 
-  public static void unZip(String input, String dirOutput, String fileOutputName)
-      throws ZipException {
-    delete(new File(dirOutput + fileOutputName));
-    ZipFile zipFile = new ZipFile(input);
-    zipFile.extractAll(dirOutput);
+  public void unZip(String input, String output) throws IOException {
+    unZip(new File(input), new File(output));
   }
 
-  public static void zip(String input, String output) throws ZipException {
-    zip(new File(input), new File(output));
+  public void unZip(File input, File output) throws IOException {
+    delete(output);
+
+    TFile.cp_rp(input, output, TArchiveDetector.NULL);
   }
 
-  public static void zip(File input, File output) throws ZipException {
-    File[] inputFiles = new File[] {input};
-    zip(inputFiles, output);
+  public void mergeZip(String input, String merge, String output) throws IOException {
+    mergeZip(new File(input), new File(merge), new File(output));
   }
 
-  public static void zip(String[] input, String output) throws ZipException {
-    File[] inputFiles = new File[] {};
+  public void mergeZip(File input, File merge, File output) throws IOException {
+    delete(output);
 
-    for (int i = 0; i < input.length; i++) {
-      inputFiles[i] = new File(input[i]);
+    TFile out = new TFile(output);
+    out.mkdir(false);
+
+    TFile[] entries = new TFile(input).listFiles();
+    for (TFile temp : entries) {
+      temp.cp_rp(new TFile(out, temp.getName()));
     }
 
-    zip(inputFiles, new File(output));
-  }
-
-  public static void zip(File[] input, File output) throws ZipException {
-    output.delete();
-    ZipFile zipFile = new ZipFile(output);
-    ZipParameters parameters = new ZipParameters();
-    parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-    parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-
-    for (int i = 0; i < input.length; i++) {
-      if (input[i].isDirectory()) {
-        zipFile.addFolder(input[i].getAbsoluteFile(), parameters);
-      } else {
-        zipFile.addFile(input[i].getAbsoluteFile(), parameters);
-      }
+    TFile[] merges = new TFile(merge).listFiles();
+    for (TFile temp : merges) {
+      temp.cp_rp(new TFile(out, temp.getName()));
     }
   }
 
-  public static String md5(String path) throws NoSuchAlgorithmException, IOException {
+  public String md5(String path) throws NoSuchAlgorithmException, IOException {
     return md5(new File(path));
   }
 
-  public static String md5(File file) throws NoSuchAlgorithmException, IOException {
+  public String md5(File file) throws NoSuchAlgorithmException, IOException {
     return encodeFile(file, MessageDigest.getInstance("MD5"));
   }
 
-  public static String sha256(String path) throws NoSuchAlgorithmException, IOException {
+  public String sha256(String path) throws NoSuchAlgorithmException, IOException {
     return sha256(new File(path));
   }
 
-  public static String sha256(File file) throws NoSuchAlgorithmException, IOException {
+  public String sha256(File file) throws NoSuchAlgorithmException, IOException {
     return encodeFile(file, MessageDigest.getInstance("SHA-256"));
   }
 
-  public static String encodeFile(File file, MessageDigest md) throws IOException {
+  public String encodeFile(File file, MessageDigest md) throws IOException {
     if ((file.exists()) && (file.length() > 0L)) {
       FileInputStream fis = new FileInputStream(file);
       byte[] dataBytes = new byte[1024];
