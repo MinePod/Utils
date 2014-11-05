@@ -147,8 +147,7 @@ public class UtilsFiles {
   }
 
   public void unZip(File input, File output) throws IOException {
-    delete(output);
-
+    TFile.rm_r(input);
     TFile.cp_rp(input, output, TArchiveDetector.NULL);
   }
 
@@ -157,14 +156,10 @@ public class UtilsFiles {
   }
 
   public void mergeZip(File input, File merge, File output) throws IOException {
-    delete(output);
-
     TFile out = new TFile(output);
+    out.rm_r();
 
-    TFile[] entries = new TFile(input).listFiles();
-    for (TFile temp : entries) {
-      temp.cp_rp(new TFile(out, temp.getName()));
-    }
+    new TFile(input).cp_rp(out);
 
     TFile[] merges = new TFile(merge).listFiles();
     for (TFile temp : merges) {
