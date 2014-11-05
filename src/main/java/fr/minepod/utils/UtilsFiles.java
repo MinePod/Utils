@@ -12,7 +12,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -178,7 +177,11 @@ public class UtilsFiles {
   }
 
   public String md5(File file) throws NoSuchAlgorithmException, IOException {
-    return encodeFile(file, MessageDigest.getInstance("MD5"));
+    if ((file.exists()) && (file.length() > 0L)) {
+      return DigestUtils.md5Hex(new FileInputStream(file));
+    }
+
+    return null;
   }
 
   public String sha256(String path) throws NoSuchAlgorithmException, IOException {
@@ -186,12 +189,8 @@ public class UtilsFiles {
   }
 
   public String sha256(File file) throws NoSuchAlgorithmException, IOException {
-    return encodeFile(file, MessageDigest.getInstance("SHA-256"));
-  }
-
-  public String encodeFile(File file, MessageDigest md) throws IOException {
     if ((file.exists()) && (file.length() > 0L)) {
-      return DigestUtils.md5Hex(new FileInputStream(file));
+      return DigestUtils.sha256Hex(new FileInputStream(file));
     }
 
     return null;
