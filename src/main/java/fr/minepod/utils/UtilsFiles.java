@@ -18,9 +18,23 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 import de.schlichtherle.truezip.file.TArchiveDetector;
+import de.schlichtherle.truezip.file.TConfig;
 import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.fs.archive.zip.JarDriver;
+import de.schlichtherle.truezip.fs.archive.zip.ZipDriver;
+import de.schlichtherle.truezip.socket.sl.IOPoolLocator;
 
 public class UtilsFiles {
+  public UtilsFiles() {
+    TConfig.get().setArchiveDetector(
+        new TArchiveDetector(
+            TArchiveDetector.NULL,
+            new Object[][] {
+                { "jar", new JarDriver(IOPoolLocator.SINGLETON) },
+                { "zip", new ZipDriver(IOPoolLocator.SINGLETON)},
+            }));
+  }
+  
   public String readFile(String path) throws IOException {
     return readFile(new File(path));
   }
@@ -156,14 +170,22 @@ public class UtilsFiles {
   }
 
   public void mergeZip(File input, File merge, File output) throws IOException {
+
     TFile out = new TFile(output);
-    out.rm_r();
+    if (out.exists()) {
+      out.rm_r();
+    }
 
     new TFile(input).cp_rp(out);
-
+    
     TFile[] merges = new TFile(merge).listFiles();
     for (TFile temp : merges) {
-      temp.cp_rp(new TFile(out, temp.getName()));
+      TFile target = new TFile(out, temp.getName());
+      if (target.exists()) {
+        target.rm_r();
+      }
+
+      temp.cp_rp(target);
     }
   }
 
