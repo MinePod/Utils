@@ -15,7 +15,7 @@ import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.bouncycastle.util.encoders.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 import de.schlichtherle.truezip.file.TArchiveDetector;
@@ -191,18 +191,7 @@ public class UtilsFiles {
 
   public String encodeFile(File file, MessageDigest md) throws IOException {
     if ((file.exists()) && (file.length() > 0L)) {
-      FileInputStream fis = new FileInputStream(file);
-      byte[] dataBytes = new byte[1024];
-      int nread = 0;
-
-      while ((nread = fis.read(dataBytes)) != -1) {
-        md.update(dataBytes, 0, nread);
-      }
-
-      byte[] mdbytes = md.digest();
-      fis.close();
-
-      return new String(Hex.encode(mdbytes));
+      return DigestUtils.md5Hex(new FileInputStream(file));
     }
 
     return null;
