@@ -27,14 +27,11 @@ import de.schlichtherle.truezip.socket.sl.IOPoolLocator;
 public class UtilsFiles {
   public UtilsFiles() {
     TConfig.get().setArchiveDetector(
-        new TArchiveDetector(
-            TArchiveDetector.NULL,
-            new Object[][] {
-                { "jar", new JarDriver(IOPoolLocator.SINGLETON) },
-                { "zip", new ZipDriver(IOPoolLocator.SINGLETON)},
-            }));
+        new TArchiveDetector(TArchiveDetector.NULL, new Object[][] {
+            {"jar", new JarDriver(IOPoolLocator.SINGLETON)},
+            {"zip", new ZipDriver(IOPoolLocator.SINGLETON)},}));
   }
-  
+
   public String readFile(String path) throws IOException {
     return readFile(new File(path));
   }
@@ -74,6 +71,8 @@ public class UtilsFiles {
   }
 
   public void writeFile(File file, String stringToWrite) throws IOException {
+    file.mkdirs();
+
     if (!file.exists()) {
       file.createNewFile();
     }
@@ -112,6 +111,7 @@ public class UtilsFiles {
   }
 
   public void copyFile(File input, File output) throws IOException {
+    output.mkdirs();
     delete(output);
 
     InputStream inputStream = new FileInputStream(input);
@@ -132,6 +132,7 @@ public class UtilsFiles {
   }
 
   public void moveFile(File input, File output) {
+    input.mkdirs();
     delete(output);
 
     input.renameTo(output);
@@ -161,6 +162,8 @@ public class UtilsFiles {
   }
 
   public void unZip(File input, File output) throws IOException {
+    input.mkdirs();
+    
     TFile.rm_r(input);
     TFile.cp_rp(input, output, TArchiveDetector.NULL);
   }
@@ -170,14 +173,15 @@ public class UtilsFiles {
   }
 
   public void mergeZip(File input, File merge, File output) throws IOException {
-
+    input.mkdirs();
+    
     TFile out = new TFile(output);
     if (out.exists()) {
       out.rm_r();
     }
 
     new TFile(input).cp_rp(out);
-    
+
     TFile[] merges = new TFile(merge).listFiles();
     for (TFile temp : merges) {
       TFile target = new TFile(out, temp.getName());
