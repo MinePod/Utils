@@ -161,7 +161,6 @@ public class UtilsFiles {
     delete(output);
 
     TFile out = new TFile(output);
-    out.mkdir(false);
 
     TFile[] entries = new TFile(input).listFiles();
     for (TFile temp : entries) {
