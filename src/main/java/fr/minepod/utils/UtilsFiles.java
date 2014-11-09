@@ -29,7 +29,7 @@ public class UtilsFiles {
     TConfig.get().setArchiveDetector(
         new TArchiveDetector(TArchiveDetector.NULL, new Object[][] {
             {"jar", new JarDriver(IOPoolLocator.SINGLETON)},
-            {"zip", new ZipDriver(IOPoolLocator.SINGLETON)},}));
+            {"zip", new ZipDriver(IOPoolLocator.SINGLETON)}}));
   }
 
   public String readFile(String path) throws IOException {
@@ -37,8 +37,13 @@ public class UtilsFiles {
   }
 
   public String readFile(File file) throws IOException {
-    return readFileWithEncoding(new InputStreamReader(new FileInputStream(file)));
+    if (!file.exists() || file.length() == 0) {
+      return null;
+    }
+
+    return readFileUtf8(file);
   }
+
 
   public String readFileUtf8(File file) throws IOException {
     return readFileWithEncoding(new InputStreamReader(new FileInputStream(file), "UTF-8"));
@@ -46,6 +51,7 @@ public class UtilsFiles {
 
   public String readFileWithEncoding(Reader reader) throws IOException {
     BufferedReader br = new BufferedReader(reader);
+
     try {
       StringBuilder sb = new StringBuilder();
       String line = br.readLine();
@@ -57,9 +63,11 @@ public class UtilsFiles {
         } else {
           sb.append("\n");
         }
+
         sb.append(line);
         line = br.readLine();
       }
+
       return sb.toString();
     } finally {
       br.close();
@@ -71,7 +79,7 @@ public class UtilsFiles {
   }
 
   public void writeFile(File file, String stringToWrite) throws IOException {
-    file.mkdirs();
+    file.getParentFile().mkdirs();
 
     if (!file.exists()) {
       file.createNewFile();
@@ -111,7 +119,7 @@ public class UtilsFiles {
   }
 
   public void copyFile(File input, File output) throws IOException {
-    output.mkdirs();
+    output.getParentFile().mkdirs();
     delete(output);
 
     InputStream inputStream = new FileInputStream(input);
@@ -132,7 +140,7 @@ public class UtilsFiles {
   }
 
   public void moveFile(File input, File output) {
-    input.mkdirs();
+    input.getParentFile().mkdirs();
     delete(output);
 
     input.renameTo(output);
@@ -162,8 +170,8 @@ public class UtilsFiles {
   }
 
   public void unZip(File input, File output) throws IOException {
-    input.mkdirs();
-    
+    input.getParentFile().mkdirs();
+
     TFile.rm_r(input);
     TFile.cp_rp(input, output, TArchiveDetector.NULL);
   }
@@ -173,8 +181,8 @@ public class UtilsFiles {
   }
 
   public void mergeZip(File input, File merge, File output) throws IOException {
-    input.mkdirs();
-    
+    input.getParentFile().mkdirs();
+
     TFile out = new TFile(output);
     if (out.exists()) {
       out.rm_r();
