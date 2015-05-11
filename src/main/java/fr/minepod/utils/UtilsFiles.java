@@ -172,8 +172,12 @@ public class UtilsFiles {
   public void unZip(File input, File output) throws IOException {
     input.getParentFile().mkdirs();
 
-    TFile.rm_r(input);
-    TFile.cp_rp(input, output, TArchiveDetector.NULL);
+    TFile out = new TFile(output);
+    if (out.exists()) {
+      out.rm_r();
+    }
+
+    new TFile(input).cp_rp(out);
   }
 
   public void mergeZip(String input, String merge, String output) throws IOException {

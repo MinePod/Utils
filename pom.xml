@@ -4,7 +4,7 @@
 
 	<groupId>fr.minepod</groupId>
 	<artifactId>utils</artifactId>
-	<version>1.5.0.7</version>
+	<version>1.5.0.8</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
