@@ -12,26 +12,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
-import de.schlichtherle.truezip.file.TArchiveDetector;
-import de.schlichtherle.truezip.file.TConfig;
-import de.schlichtherle.truezip.file.TFile;
-import de.schlichtherle.truezip.fs.archive.zip.JarDriver;
-import de.schlichtherle.truezip.fs.archive.zip.ZipDriver;
-import de.schlichtherle.truezip.socket.sl.IOPoolLocator;
-
 public class UtilsFiles {
-  public UtilsFiles() {
-    TConfig.get().setArchiveDetector(
-        new TArchiveDetector(TArchiveDetector.NULL, new Object[][] {
-            {"jar", new JarDriver(IOPoolLocator.SINGLETON)},
-            {"zip", new ZipDriver(IOPoolLocator.SINGLETON)}}));
-  }
-
   public String readFile(String path) throws IOException {
     return readFile(new File(path));
   }
@@ -165,65 +151,30 @@ public class UtilsFiles {
     }
   }
 
-  public void unZip(String input, String output) throws IOException {
-    unZip(new File(input), new File(output));
-  }
-
-  public void unZip(File input, File output) throws IOException {
-    input.getParentFile().mkdirs();
-
-    TFile out = new TFile(output);
-    if (out.exists()) {
-      out.rm_r();
-    }
-
-    new TFile(input).cp_rp(out);
-  }
-
-  public void mergeZip(String input, String merge, String output) throws IOException {
-    mergeZip(new File(input), new File(merge), new File(output));
-  }
-
-  public void mergeZip(File input, File merge, File output) throws IOException {
-    input.getParentFile().mkdirs();
-
-    TFile out = new TFile(output);
-    if (out.exists()) {
-      out.rm_r();
-    }
-
-    new TFile(input).cp_rp(out);
-
-    TFile[] merges = new TFile(merge).listFiles();
-    for (TFile temp : merges) {
-      TFile target = new TFile(out, temp.getName());
-      if (target.exists()) {
-        target.rm_r();
-      }
-
-      temp.cp_rp(target);
-    }
-  }
-
   public String md5(String path) throws NoSuchAlgorithmException, IOException {
     return md5(new File(path));
   }
 
   public String md5(File file) throws NoSuchAlgorithmException, IOException {
     if ((file.exists()) && (file.length() > 0L)) {
-      return DigestUtils.md5Hex(new FileInputStream(file));
-    }
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      FileInputStream stream = new FileInputStream(file);
+      byte[] dataBytes = new byte[1024];
 
-    return null;
-  }
+      int nread = 0;
+      while ((nread = stream.read(dataBytes)) != -1) {
+        md.update(dataBytes, 0, nread);
+      }
 
-  public String sha256(String path) throws NoSuchAlgorithmException, IOException {
-    return sha256(new File(path));
-  }
+      stream.close();
+      byte[] mdbytes = md.digest();
 
-  public String sha256(File file) throws NoSuchAlgorithmException, IOException {
-    if ((file.exists()) && (file.length() > 0L)) {
-      return DigestUtils.sha256Hex(new FileInputStream(file));
+      StringBuffer buffer = new StringBuffer();
+      for (int i = 0; i < mdbytes.length; i++) {
+        buffer.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+      }
+
+      return buffer.toString();
     }
 
     return null;
